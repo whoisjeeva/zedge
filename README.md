@@ -1,4 +1,4 @@
-# Zedge - Android API library for Zedge website
+<h1 align="center">Zedge API for Android</h1>
 
 <p align="center">
     <a href="https://jitpack.io/#okbash/zedge"><img src="https://img.shields.io/jitpack/v/github/okbash/zedge?style=for-the-badge" alt="Release"></a>
