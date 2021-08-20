@@ -3,10 +3,10 @@ package net.suyambu.zedge.data
 import sh.fearless.hiper.data.Headers
 
 data class ZedgeImage(
-    val currentPageNumber: Int,
+    val page: Int,
     val pageCount: Int,
     val images: List<Image>,
-    val message: String,
+    val statusMessage: String,
     val statusCode: Int,
     val isSuccessful: Boolean,
     val isRedirect: Boolean,

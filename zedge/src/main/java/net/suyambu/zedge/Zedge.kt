@@ -1,18 +1,9 @@
 package net.suyambu.zedge
 
 import net.suyambu.zedge.data.*
-import net.suyambu.zedge.interfaces.RingtoneListener
-import net.suyambu.zedge.interfaces.UrlListener
-import net.suyambu.zedge.interfaces.WallpaperListener
-import org.json.JSONArray
 import org.json.JSONObject
 import sh.fearless.hiper.Hiper
-import sh.fearless.hiper.Queue
 import sh.fearless.hiper.controllers.Caller
-import sh.fearless.hiper.data.Headers
-import sh.fearless.hiper.data.HiperResponse
-import sh.fearless.util.debug
-import java.lang.Exception
 import java.net.URLEncoder
 
 
@@ -49,10 +40,10 @@ class Zedge {
                 var obj = JSONObject(resp.text!!)
                 if (obj.has("errors")) {
                     val out = ZedgeAudio(
-                        currentPageNumber = page,
+                        page = page,
                         pageCount = 0,
                         audios = listOf(),
-                        message = resp.message,
+                        statusMessage = resp.message,
                         statusCode = resp.statusCode,
                         isSuccessful = resp.isSuccessful,
                         isRedirect = resp.isRedirect,
@@ -77,10 +68,10 @@ class Zedge {
                         ))
                     }
                     val out = ZedgeAudio(
-                        currentPageNumber = page,
+                        page = page,
                         pageCount = obj.getInt("total"),
                         audios = audios,
-                        message = resp.message,
+                        statusMessage = resp.message,
                         statusCode = resp.statusCode,
                         isSuccessful = resp.isSuccessful,
                         isRedirect = resp.isRedirect,
@@ -92,10 +83,10 @@ class Zedge {
             }
             queue.reject { resp ->
                 val out = ZedgeAudio(
-                    currentPageNumber = page,
+                    page = page,
                     pageCount = 0,
                     audios = listOf(),
-                    message = resp.message,
+                    statusMessage = resp.message,
                     statusCode = resp.statusCode,
                     isSuccessful = resp.isSuccessful,
                     isRedirect = resp.isRedirect,
@@ -120,10 +111,10 @@ class Zedge {
                 var obj = JSONObject(resp.text!!)
                 if (obj.has("errors")) {
                     val out = ZedgeAudio(
-                        currentPageNumber = page,
+                        page = page,
                         pageCount = 0,
                         audios = listOf(),
-                        message = resp.message,
+                        statusMessage = resp.message,
                         statusCode = resp.statusCode,
                         isSuccessful = resp.isSuccessful,
                         isRedirect = resp.isRedirect,
@@ -148,10 +139,10 @@ class Zedge {
                         ))
                     }
                     val out = ZedgeAudio(
-                        currentPageNumber = page,
+                        page = page,
                         pageCount = obj.getInt("total"),
                         audios = audios,
-                        message = resp.message,
+                        statusMessage = resp.message,
                         statusCode = resp.statusCode,
                         isSuccessful = resp.isSuccessful,
                         isRedirect = resp.isRedirect,
@@ -163,10 +154,10 @@ class Zedge {
             }
             queue.reject { resp ->
                 val out = ZedgeAudio(
-                    currentPageNumber = page,
+                    page = page,
                     pageCount = 0,
                     audios = listOf(),
-                    message = resp.message,
+                    statusMessage = resp.message,
                     statusCode = resp.statusCode,
                     isSuccessful = resp.isSuccessful,
                     isRedirect = resp.isRedirect,
@@ -192,10 +183,10 @@ class Zedge {
                 var obj = JSONObject(resp.text!!)
                 if (obj.has("errors")) {
                     val out = ZedgeImage(
-                        currentPageNumber = page,
+                        page = page,
                         pageCount = 0,
                         images = listOf(),
-                        message = resp.message,
+                        statusMessage = resp.message,
                         statusCode = resp.statusCode,
                         isSuccessful = resp.isSuccessful,
                         isRedirect = resp.isRedirect,
@@ -217,10 +208,10 @@ class Zedge {
                         ))
                     }
                     val out = ZedgeImage(
-                        currentPageNumber = page,
+                        page = page,
                         pageCount = obj.getInt("total"),
                         images = images,
-                        message = resp.message,
+                        statusMessage = resp.message,
                         statusCode = resp.statusCode,
                         isSuccessful = resp.isSuccessful,
                         isRedirect = resp.isRedirect,
@@ -232,10 +223,10 @@ class Zedge {
             }
             queue.reject { resp ->
                 val out = ZedgeImage(
-                    currentPageNumber = page,
+                    page = page,
                     pageCount = 0,
                     images = listOf(),
-                    message = resp.message,
+                    statusMessage = resp.message,
                     statusCode = resp.statusCode,
                     isSuccessful = resp.isSuccessful,
                     isRedirect = resp.isRedirect,
@@ -259,7 +250,7 @@ class Zedge {
                 if (obj.has("errors")) {
                     callback(ZedgeUrl(
                         url = null,
-                        message = resp.message,
+                        statusMessage = resp.message,
                         statusCode = resp.statusCode,
                         isSuccessful = resp.isSuccessful,
                         isRedirect = resp.isRedirect,
@@ -270,7 +261,7 @@ class Zedge {
                     val url = obj.getJSONObject("data").getString("contentDownloadUrlAsUgc")
                     callback(ZedgeUrl(
                         url = url,
-                        message = resp.message,
+                        statusMessage = resp.message,
                         statusCode = resp.statusCode,
                         isSuccessful = resp.isSuccessful,
                         isRedirect = resp.isRedirect,
@@ -282,7 +273,7 @@ class Zedge {
             queue.reject { resp ->
                 callback(ZedgeUrl(
                     url = null,
-                    message = resp.message,
+                    statusMessage = resp.message,
                     statusCode = resp.statusCode,
                     isSuccessful = resp.isSuccessful,
                     isRedirect = resp.isRedirect,
@@ -304,10 +295,10 @@ class Zedge {
                 var obj = JSONObject(resp.text!!)
                 if (obj.has("errors")) {
                     val out = ZedgeImage(
-                        currentPageNumber = page,
+                        page = page,
                         pageCount = 0,
                         images = listOf(),
-                        message = resp.message,
+                        statusMessage = resp.message,
                         statusCode = resp.statusCode,
                         isSuccessful = resp.isSuccessful,
                         isRedirect = resp.isRedirect,
@@ -329,10 +320,10 @@ class Zedge {
                         ))
                     }
                     val out = ZedgeImage(
-                        currentPageNumber = page,
+                        page = page,
                         pageCount = obj.getInt("total"),
                         images = images,
-                        message = resp.message,
+                        statusMessage = resp.message,
                         statusCode = resp.statusCode,
                         isSuccessful = resp.isSuccessful,
                         isRedirect = resp.isRedirect,
@@ -344,10 +335,10 @@ class Zedge {
             }
             queue.reject { resp ->
                 val out = ZedgeImage(
-                    currentPageNumber = page,
+                    page = page,
                     pageCount = 0,
                     images = listOf(),
-                    message = resp.message,
+                    statusMessage = resp.message,
                     statusCode = resp.statusCode,
                     isSuccessful = resp.isSuccessful,
                     isRedirect = resp.isRedirect,
