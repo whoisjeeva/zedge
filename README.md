@@ -34,59 +34,41 @@ implementation "com.github.okbash.zedge:$zedge_version"
 Create a Zedge wallpaper instance
 
 ```kotlin
-val zedge = ZedgeWallpaper()
+val zedge = Zedge.getWallpaperInstance()
 ```
 
 Get all trending wallpapers
 
 ```kotlin
-zedge.trending(1, object : WallpaperListener {
-    override fun onReject(response: HiperResponse) {
-        debug(response)
+zedge.trending(page = 1) {
+    if (isSuccessful) {
+        debug(images)
+    } else {
+        debug(statusCode)
     }
-
-    override fun onError(error: Exception) {
-        debug(error)
-    }
-
-    override fun onResolve(data: ZedgeImage) {
-        debug(data)
-    }
-})
+}
 ```
 
 Get HD image URL for a ZedgeImage
 
 ```kotlin
-zedge.directUrl("ae7ce087-0cf8-3caf-8c7f-f7a957108865", object : UrlListener {
-    override fun onReject(response: HiperResponse) {
-        debug(response)
-    }
-
-    override fun onError(error: Exception) {
-        debug(error)
-    }
-
-    override fun onResolve(url: String?) {
+zedge.directUrl(itemId = "ae7ce087-0cf8-3caf-8c7f-f7a957108865") {
+    if (isSuccessful) {
         debug(url)
+    } else {
+        debug(statusCode)
     }
-})
+}
 ```
 
 Search Zedge database
 
 ```kotlin
-zedge.search("iron man", 1, object : WallpaperListener {
-    override fun onReject(response: HiperResponse) {
-        debug(response)
+zedge.search(query = "iron man", page = 1) {
+    if (isSuccessful) {
+        debug(images)
+    } else {
+        debug(statusCode)
     }
-
-    override fun onError(error: Exception) {
-        debug(error)
-    }
-
-    override fun onResolve(data: ZedgeImage) {
-        debug(data)
-    }
-})
+}
 ```

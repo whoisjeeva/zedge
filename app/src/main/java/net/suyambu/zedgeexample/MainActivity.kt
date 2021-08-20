@@ -19,18 +19,19 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val zedge = Zedge.getRingtoneInstance()
-        zedge.search("iron man", 1, object : RingtoneListener {
-            override fun onResolve(data: ZedgeAudio) {
-                debug(data)
-            }
 
-            override fun onReject(response: HiperResponse) {
-                debug(response)
-            }
 
-            override fun onError(error: Exception) {
-                debug(error)
+        try {
+            zedge.search(query = "iron man", page = 1) {
+                if (isSuccessful) {
+                    debug(audios)
+                } else {
+                    debug(contentText)
+                }
             }
-        })
+        } catch (e: Exception) {
+            debug(e)
+        }
+
     }
 }

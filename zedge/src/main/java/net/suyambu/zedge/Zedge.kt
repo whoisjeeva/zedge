@@ -1,9 +1,6 @@
 package net.suyambu.zedge
 
-import net.suyambu.zedge.data.Audio
-import net.suyambu.zedge.data.Image
-import net.suyambu.zedge.data.ZedgeAudio
-import net.suyambu.zedge.data.ZedgeImage
+import net.suyambu.zedge.data.*
 import net.suyambu.zedge.interfaces.RingtoneListener
 import net.suyambu.zedge.interfaces.UrlListener
 import net.suyambu.zedge.interfaces.WallpaperListener
@@ -12,10 +9,12 @@ import org.json.JSONObject
 import sh.fearless.hiper.Hiper
 import sh.fearless.hiper.Queue
 import sh.fearless.hiper.controllers.Caller
+import sh.fearless.hiper.data.Headers
 import sh.fearless.hiper.data.HiperResponse
 import sh.fearless.util.debug
 import java.lang.Exception
 import java.net.URLEncoder
+
 
 class Zedge {
     companion object {
@@ -40,17 +39,27 @@ class Zedge {
 
     inner class Ringtone {
 
-        fun trending(pageNum: Int, listener: RingtoneListener? = null): Caller {
+        fun trending(page: Int, callback: ZedgeAudio.() -> Unit): Caller {
             val json = JSONObject("""
-            {"variables":{"input":{"contentType":"RINGTONE","page":$pageNum,"size":24}}}
+            {"variables":{"input":{"contentType":"RINGTONE","page":$page,"size":24}}}
         """.trimIndent())
             json.put("query", trendingQuery)
             val queue = hiper.post(API_URL, json=json)
-            queue.resolve {
-                var obj = JSONObject(it.text!!)
+            queue.resolve { resp ->
+                var obj = JSONObject(resp.text!!)
                 if (obj.has("errors")) {
-                    val out = ZedgeAudio(page = pageNum, total = 0, audios = listOf())
-                    listener?.onResolve(out)
+                    val out = ZedgeAudio(
+                        currentPageNumber = page,
+                        pageCount = 0,
+                        audios = listOf(),
+                        message = resp.message,
+                        statusCode = resp.statusCode,
+                        isSuccessful = resp.isSuccessful,
+                        isRedirect = resp.isRedirect,
+                        headers = resp.headers,
+                        contentText = resp.text
+                    )
+                    callback.invoke(out)
                 } else {
                     obj = obj.getJSONObject("data").getJSONObject("browseAsUgc")
                     val audios = ArrayList<Audio>()
@@ -67,30 +76,61 @@ class Zedge {
                             gradientEnd = item.getJSONObject("meta").getString("gradientEnd")
                         ))
                     }
-                    val out = ZedgeAudio(page = pageNum, total = obj.getInt("total"), audios = audios)
-                    listener?.onResolve(out)
+                    val out = ZedgeAudio(
+                        currentPageNumber = page,
+                        pageCount = obj.getInt("total"),
+                        audios = audios,
+                        message = resp.message,
+                        statusCode = resp.statusCode,
+                        isSuccessful = resp.isSuccessful,
+                        isRedirect = resp.isRedirect,
+                        headers = resp.headers,
+                        contentText = resp.text
+                    )
+                    callback.invoke(out)
                 }
             }
-            queue.reject {
-                listener?.onReject(it)
+            queue.reject { resp ->
+                val out = ZedgeAudio(
+                    currentPageNumber = page,
+                    pageCount = 0,
+                    audios = listOf(),
+                    message = resp.message,
+                    statusCode = resp.statusCode,
+                    isSuccessful = resp.isSuccessful,
+                    isRedirect = resp.isRedirect,
+                    headers = resp.headers,
+                    contentText = resp.text
+                )
+                callback.invoke(out)
             }
             queue.catch {
-                listener?.onError(it)
+                throw it
             }
             return queue.execute()
         }
 
-        fun search(q: String, pageNum: Int, listener: RingtoneListener? = null): Caller {
+        fun search(query: String, page: Int, callback: ZedgeAudio.() -> Unit): Caller {
             val json = JSONObject("""
-            {"variables":{"input":{"contentType":"RINGTONE","keyword":"${URLEncoder.encode(q.replace("\"", ""), "UTF-8")}","page":$pageNum,"size":24}}}
+            {"variables":{"input":{"contentType":"RINGTONE","keyword":"${URLEncoder.encode(query.replace("\"", ""), "UTF-8")}","page":$page,"size":24}}}
         """.trimIndent())
             json.put("query", searchQuery)
             val queue = hiper.post(API_URL, json = json)
-            queue.resolve {
-                var obj = JSONObject(it.text!!)
+            queue.resolve { resp ->
+                var obj = JSONObject(resp.text!!)
                 if (obj.has("errors")) {
-                    val out = ZedgeAudio(page = pageNum, total = 0, audios = listOf())
-                    listener?.onResolve(out)
+                    val out = ZedgeAudio(
+                        currentPageNumber = page,
+                        pageCount = 0,
+                        audios = listOf(),
+                        message = resp.message,
+                        statusCode = resp.statusCode,
+                        isSuccessful = resp.isSuccessful,
+                        isRedirect = resp.isRedirect,
+                        headers = resp.headers,
+                        contentText = resp.text
+                    )
+                    callback(out)
                 } else {
                     obj = obj.getJSONObject("data").getJSONObject("searchAsUgc")
                     val audios = ArrayList<Audio>()
@@ -107,29 +147,62 @@ class Zedge {
                             gradientEnd = item.getJSONObject("meta").getString("gradientEnd")
                         ))
                     }
-                    val out = ZedgeAudio(page = pageNum, total = obj.getInt("total"), audios = audios)
-                    listener?.onResolve(out)
+                    val out = ZedgeAudio(
+                        currentPageNumber = page,
+                        pageCount = obj.getInt("total"),
+                        audios = audios,
+                        message = resp.message,
+                        statusCode = resp.statusCode,
+                        isSuccessful = resp.isSuccessful,
+                        isRedirect = resp.isRedirect,
+                        headers = resp.headers,
+                        contentText = resp.text
+                    )
+                    callback(out)
                 }
             }
-            queue.reject { listener?.onReject(it) }
-            queue.catch { listener?.onError(it) }
+            queue.reject { resp ->
+                val out = ZedgeAudio(
+                    currentPageNumber = page,
+                    pageCount = 0,
+                    audios = listOf(),
+                    message = resp.message,
+                    statusCode = resp.statusCode,
+                    isSuccessful = resp.isSuccessful,
+                    isRedirect = resp.isRedirect,
+                    headers = resp.headers,
+                    contentText = resp.text
+                )
+                callback(out)
+            }
+            queue.catch { throw it }
             return queue.execute()
         }
 
     }
 
     inner class Wallpaper {
-        fun search(q: String, pageNum: Int, listener: WallpaperListener? = null): Caller {
+        fun search(query: String, page: Int, callback: ZedgeImage.() -> Unit): Caller {
             val json = JSONObject("""
-            {"variables":{"input":{"contentType":"WALLPAPER","keyword":"${URLEncoder.encode(q.replace("\"", ""), "UTF-8")}","page":$pageNum,"size":24}}}
+            {"variables":{"input":{"contentType":"WALLPAPER","keyword":"${URLEncoder.encode(query.replace("\"", ""), "UTF-8")}","page":$page,"size":24}}}
         """.trimIndent())
             json.put("query", searchQuery)
             val queue = hiper.post(API_URL, json = json)
-            queue.resolve {
-                var obj = JSONObject(it.text!!)
+            queue.resolve { resp ->
+                var obj = JSONObject(resp.text!!)
                 if (obj.has("errors")) {
-                    val out = ZedgeImage(page = pageNum, total = 0, images = listOf())
-                    listener?.onResolve(out)
+                    val out = ZedgeImage(
+                        currentPageNumber = page,
+                        pageCount = 0,
+                        images = listOf(),
+                        message = resp.message,
+                        statusCode = resp.statusCode,
+                        isSuccessful = resp.isSuccessful,
+                        isRedirect = resp.isRedirect,
+                        headers = resp.headers,
+                        contentText = resp.text
+                    )
+                    callback(out)
                 } else {
                     obj = obj.getJSONObject("data").getJSONObject("searchAsUgc")
                     val images = ArrayList<Image>()
@@ -143,46 +216,105 @@ class Zedge {
                             title = item.getString("title")
                         ))
                     }
-                    val out = ZedgeImage(page = pageNum, total = obj.getInt("total"), images = images)
-                    listener?.onResolve(out)
+                    val out = ZedgeImage(
+                        currentPageNumber = page,
+                        pageCount = obj.getInt("total"),
+                        images = images,
+                        message = resp.message,
+                        statusCode = resp.statusCode,
+                        isSuccessful = resp.isSuccessful,
+                        isRedirect = resp.isRedirect,
+                        headers = resp.headers,
+                        contentText = resp.text
+                    )
+                    callback(out)
                 }
             }
-            queue.reject { listener?.onReject(it) }
-            queue.catch { listener?.onError(it) }
+            queue.reject { resp ->
+                val out = ZedgeImage(
+                    currentPageNumber = page,
+                    pageCount = 0,
+                    images = listOf(),
+                    message = resp.message,
+                    statusCode = resp.statusCode,
+                    isSuccessful = resp.isSuccessful,
+                    isRedirect = resp.isRedirect,
+                    headers = resp.headers,
+                    contentText = resp.text
+                )
+                callback(out)
+            }
+            queue.catch { throw it }
             return queue.execute()
         }
 
-        fun directUrl(itemId: String, listener: UrlListener? = null): Caller {
+        fun directUrl(itemId: String, callback: ZedgeUrl.() -> Unit): Caller {
             val json = JSONObject("""
             {"variables":{"itemId":"$itemId"}}
         """.trimIndent())
             json.put("query", directUrlQuery)
             val queue = hiper.post(API_URL, json = json)
-            queue.resolve {
-                val obj = JSONObject(it.text!!)
+            queue.resolve { resp ->
+                val obj = JSONObject(resp.text!!)
                 if (obj.has("errors")) {
-                    listener?.onResolve(null)
+                    callback(ZedgeUrl(
+                        url = null,
+                        message = resp.message,
+                        statusCode = resp.statusCode,
+                        isSuccessful = resp.isSuccessful,
+                        isRedirect = resp.isRedirect,
+                        headers = resp.headers,
+                        contentText = resp.text
+                    ))
                 } else {
                     val url = obj.getJSONObject("data").getString("contentDownloadUrlAsUgc")
-                    listener?.onResolve(url)
+                    callback(ZedgeUrl(
+                        url = url,
+                        message = resp.message,
+                        statusCode = resp.statusCode,
+                        isSuccessful = resp.isSuccessful,
+                        isRedirect = resp.isRedirect,
+                        headers = resp.headers,
+                        contentText = resp.text
+                    ))
                 }
             }
-            queue.reject { listener?.onReject(it) }
-            queue.catch { listener?.onError(it) }
+            queue.reject { resp ->
+                callback(ZedgeUrl(
+                    url = null,
+                    message = resp.message,
+                    statusCode = resp.statusCode,
+                    isSuccessful = resp.isSuccessful,
+                    isRedirect = resp.isRedirect,
+                    headers = resp.headers,
+                    contentText = resp.text
+                ))
+            }
+            queue.catch { throw it }
             return queue.execute()
         }
 
-        fun trending(pageNum: Int, listener: WallpaperListener? = null): Caller {
+        fun trending(page: Int, callback: ZedgeImage.() -> Unit): Caller {
             val json = JSONObject("""
-            {"variables":{"input":{"contentType":"WALLPAPER","page":$pageNum,"size":24}}}
+            {"variables":{"input":{"contentType":"WALLPAPER","page":$page,"size":24}}}
         """.trimIndent())
             json.put("query", trendingQuery)
             val queue = hiper.post(API_URL, json=json)
-            queue.resolve {
-                var obj = JSONObject(it.text!!)
+            queue.resolve { resp ->
+                var obj = JSONObject(resp.text!!)
                 if (obj.has("errors")) {
-                    val out = ZedgeImage(page = pageNum, total = 0, images = listOf())
-                    listener?.onResolve(out)
+                    val out = ZedgeImage(
+                        currentPageNumber = page,
+                        pageCount = 0,
+                        images = listOf(),
+                        message = resp.message,
+                        statusCode = resp.statusCode,
+                        isSuccessful = resp.isSuccessful,
+                        isRedirect = resp.isRedirect,
+                        headers = resp.headers,
+                        contentText = resp.text
+                    )
+                    callback(out)
                 } else {
                     obj = obj.getJSONObject("data").getJSONObject("browseAsUgc")
                     val images = ArrayList<Image>()
@@ -196,16 +328,35 @@ class Zedge {
                             title = item.getString("title")
                         ))
                     }
-                    val out = ZedgeImage(page = pageNum, total = obj.getInt("total"), images = images)
-                    listener?.onResolve(out)
+                    val out = ZedgeImage(
+                        currentPageNumber = page,
+                        pageCount = obj.getInt("total"),
+                        images = images,
+                        message = resp.message,
+                        statusCode = resp.statusCode,
+                        isSuccessful = resp.isSuccessful,
+                        isRedirect = resp.isRedirect,
+                        headers = resp.headers,
+                        contentText = resp.text
+                    )
+                    callback(out)
                 }
             }
-            queue.reject {
-                listener?.onReject(it)
+            queue.reject { resp ->
+                val out = ZedgeImage(
+                    currentPageNumber = page,
+                    pageCount = 0,
+                    images = listOf(),
+                    message = resp.message,
+                    statusCode = resp.statusCode,
+                    isSuccessful = resp.isSuccessful,
+                    isRedirect = resp.isRedirect,
+                    headers = resp.headers,
+                    contentText = resp.text
+                )
+                callback(out)
             }
-            queue.catch {
-                listener?.onError(it)
-            }
+            queue.catch { throw it }
             return queue.execute()
         }
     }
